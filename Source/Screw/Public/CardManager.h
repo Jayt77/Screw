@@ -56,11 +56,11 @@ protected:
     void InitializeDeck();
 
     /** Deals cards to all players */
-    UFUNCTION(BlueprintCallable, Category = "Card Management")
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Card Management")
     void DealCardsToPlayers();
 
     /** Advances the turn to the next player */
-    UFUNCTION(BlueprintCallable, Category = "Card Management")
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Card Management")
     void AdvanceTurn();
 
     /** Shuffles the deck */
@@ -68,13 +68,27 @@ protected:
     void ShuffleDeck();
 
     /** Plays a card from a player's hand */
-    UFUNCTION(BlueprintCallable, Category = "Card Management")
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Card Management")
     void PlayCard(AController* Controller, int32 CardIndex);
+
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Card Management")
+    /** Spawns a single card at a specified location */
+    ACard* SpawnCardAtLocation(const FCardData& CardData, const FTransform& Transform, AController* Controller);
 
     /** Retrieves the hand of a specific player */
     UFUNCTION(BlueprintCallable, Category = "Card Management")
     TArray<ACard*> GetPlayerHand(AController* Controller);
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Card Settings")
+    /** Current turn index */
+    int32 CurrentTurnIndex = -1;
+
+    UPROPERTY(BlueprintReadWrite, Category = "Card Settings")
+    AController* CurrentTurnPlayer;
+
+    UFUNCTION(BlueprintCallable, Category = "Card Settings")
+    ACard* GrantCardFromDeck(AController* Controller);
+    
 private:
     /** The deck containing card data */
     UPROPERTY()
@@ -84,13 +98,8 @@ private:
     UPROPERTY()
     TMap<AController*, FPlayerHand> PlayerHands;
 
-    /** Current turn index */
-    int32 CurrentTurnIndex = 0;
-
     /** Array of connected Controllers */
     UPROPERTY()
     TArray<AController*> Controllers;
 
-    /** Spawns a single card at a specified location */
-    ACard* SpawnCardAtLocation(const FCardData& CardData, const FTransform& Transform);
 };

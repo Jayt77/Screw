@@ -65,9 +65,12 @@ void ACardManager::ShuffleDeck()
     UE_LOG(LogTemp, Log, TEXT("Deck shuffled."));
 }
 
-ACard* ACardManager::SpawnCardAtLocation(const FCardData& CardData, const FTransform& Transform)
+ACard* ACardManager::SpawnCardAtLocation_Implementation(const FCardData& CardData, const FTransform& Transform, AController* Controller)
 {
-    ACard* NewCard = GetWorld()->SpawnActor<ACard>(CardClass, Transform);
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.Owner = Controller;
+    ACard* NewCard = GetWorld()->SpawnActor<ACard>(CardClass, Transform, SpawnParams);
+
     if (IsValid(NewCard))
     {
         NewCard->InitializeCard(CardData);
@@ -80,7 +83,7 @@ ACard* ACardManager::SpawnCardAtLocation(const FCardData& CardData, const FTrans
     return NewCard;
 }
 
-void ACardManager::DealCardsToPlayers()
+void ACardManager::DealCardsToPlayers_Implementation()
 {
     // Load all Player Controllers
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), AController::StaticClass(), (TArray<AActor*>&)Controllers);
@@ -124,21 +127,57 @@ void ACardManager::DealCardsToPlayers()
             CardRotation.Roll = 0.f;  // Prevent roll tilt
 
             FTransform CardTransform(CardRotation, CardPosition);
-            ACard* SpawnedCard = SpawnCardAtLocation(CardData, CardTransform);
+            ACard* SpawnedCard = SpawnCardAtLocation(CardData, CardTransform, Controller);
 
             if (IsValid(SpawnedCard))
             {
                 PlayerHand.Cards.Add(SpawnedCard);
             }
         }
-
         PlayerHands.Add(Controller, PlayerHand);
     }
 
     UE_LOG(LogTemp, Log, TEXT("All players have been dealt their cards at proper positions."));
 }
 
-void ACardManager::AdvanceTurn()
+ACard* ACardManager::GrantCardFromDeck(AController* Controller) {
+    if (!IsValid(Controller) || !IsValid(Controller->GetPawn()))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Invalid Controller or Pawn detected."));
+        return nullptr;
+    }
+
+    if (Deck.Num() == 0)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Deck ran out of cards while dealing to player %s!"), *Controller->GetName());
+        return nullptr;
+    }
+
+    APawn* PlayerPawn = Controller->GetPawn();
+    FVector PlayerLocation = PlayerPawn->GetActorLocation();
+    FVector ForwardVector = PlayerPawn->GetActorForwardVector();
+    FVector RightVector = PlayerPawn->GetActorRightVector();
+    FVector GridOrigin = PlayerLocation + (ForwardVector * ForwardOffset) + FVector(0.f, 0.f, VerticalOffset);
+    GridOrigin -= RightVector * ((CardsPerPlayer - 1) * CardSpacing / 2);
+
+    FCardData CardData = Deck.Pop();
+    FVector CardPosition = GridOrigin + (RightVector * CardSpacing);
+    FRotator CardRotation = (PlayerLocation - CardPosition).Rotation();
+    CardRotation.Pitch = 0.f; // Prevent pitch tilt
+    CardRotation.Roll = 0.f;  // Prevent roll tilt
+
+    FTransform CardTransform(CardRotation, CardPosition);
+    ACard* SpawnedCard = SpawnCardAtLocation(CardData, CardTransform, Controller);
+
+    if (IsValid(SpawnedCard))
+    {
+        GetPlayerHand(Controller).Add(SpawnedCard);
+    }
+
+    return SpawnedCard;
+}
+
+void ACardManager::AdvanceTurn_Implementation()
 {
     if (Controllers.Num() == 0)
     {
@@ -147,9 +186,9 @@ void ACardManager::AdvanceTurn()
     }
 
     CurrentTurnIndex = (CurrentTurnIndex + 1) % Controllers.Num();
-    AController* CurrentPlayer = Controllers[CurrentTurnIndex];
+    CurrentTurnPlayer = Controllers[CurrentTurnIndex];
 
-    UE_LOG(LogTemp, Log, TEXT("It's now Player %s's turn."), *CurrentPlayer->GetName());
+    UE_LOG(LogTemp, Log, TEXT("It's now Player %s's turn."), *CurrentTurnPlayer->GetName());
 }
 
 TArray<ACard*> ACardManager::GetPlayerHand(AController* Controller)
@@ -163,7 +202,7 @@ TArray<ACard*> ACardManager::GetPlayerHand(AController* Controller)
     return TArray<ACard*>();
 }
 
-void ACardManager::PlayCard(AController* Controller, int32 CardIndex)
+void ACardManager::PlayCard_Implementation(AController* Controller, int32 CardIndex)
 {
     if (!PlayerHands.Contains(Controller))
     {
@@ -183,10 +222,8 @@ void ACardManager::PlayCard(AController* Controller, int32 CardIndex)
     if (IsValid(PlayedCard))
     {
         UE_LOG(LogTemp, Log, TEXT("Player %s played card: %s"), *Controller->GetName(), *PlayedCard->GetName());
+        PlayedCard->PrintCardDetails();
         PlayerHand.Cards.RemoveAt(CardIndex);
-
-        // Optionally destroy the card actor
-        PlayedCard->Destroy();
     }
     else
     {

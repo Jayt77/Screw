@@ -4,12 +4,12 @@
 
 ACard::ACard()
 {
-    PrimaryActorTick.bCanEverTick = false;
+
 }
 
 void ACard::BeginPlay()
 {
-    PrintCardDetails();
+    Super::BeginPlay();
 }
 
 void ACard::InitializeCard(const FCardData& NewCardData)

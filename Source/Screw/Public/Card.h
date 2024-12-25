@@ -74,7 +74,6 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Card")
     void PrintCardDetails() const;
 
-private:
     /** Card Data Struct to hold the card's information */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Card", meta = (AllowPrivateAccess = "true"))
     FCardData CardData;
