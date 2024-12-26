@@ -87,6 +87,9 @@ protected:
     AController* CurrentTurnPlayer;
 
     UFUNCTION(BlueprintCallable, Category = "Card Settings")
+    void GrantCard(AController* Controller, ACard* Card, FTransform Transform);
+
+    UFUNCTION(BlueprintCallable, Category = "Card Settings")
     ACard* GrantCardFromDeck(AController* Controller);
     
 private:

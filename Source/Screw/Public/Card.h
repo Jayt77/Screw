@@ -35,7 +35,7 @@ public:
     int32 Value;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Card Data")
-    UMaterialInterface* Material;
+    UTexture* Texture;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Card Data")
     ECardAbility Ability;
@@ -47,7 +47,7 @@ public:
         : Name(TEXT("Default Card"))
         , Description(TEXT("No Description"))
         , Value(0)
-        , Material(nullptr)
+        , Texture(nullptr)
         , Ability(ECardAbility::None)
         , Quantity(1)
     {

@@ -122,9 +122,7 @@ void ACardManager::DealCardsToPlayers_Implementation()
 
             FCardData CardData = Deck.Pop();
             FVector CardPosition = GridOrigin + (RightVector * i * CardSpacing);
-            FRotator CardRotation = (PlayerLocation - CardPosition).Rotation();
-            CardRotation.Pitch = 0.f; // Prevent pitch tilt
-            CardRotation.Roll = 0.f;  // Prevent roll tilt
+            FRotator CardRotation = ForwardVector.Rotation();
 
             FTransform CardTransform(CardRotation, CardPosition);
             ACard* SpawnedCard = SpawnCardAtLocation(CardData, CardTransform, Controller);
@@ -140,6 +138,22 @@ void ACardManager::DealCardsToPlayers_Implementation()
     UE_LOG(LogTemp, Log, TEXT("All players have been dealt their cards at proper positions."));
 }
 
+void ACardManager::GrantCard(AController* Controller, ACard* Card, FTransform Transform) {
+    if (!IsValid(Controller) || !IsValid(Controller->GetPawn()) || !IsValid(Card))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Invalid Controller or Pawn or card detected."));
+        return;
+    }
+
+    FCardData CardData = Card->CardData;
+    ACard* SpawnedCard = SpawnCardAtLocation(CardData, Transform, Controller);
+
+    if (IsValid(SpawnedCard))
+    {
+        GetPlayerHand(Controller).Add(SpawnedCard);
+    }
+}
+
 ACard* ACardManager::GrantCardFromDeck(AController* Controller) {
     if (!IsValid(Controller) || !IsValid(Controller->GetPawn()))
     {
@@ -149,22 +163,14 @@ ACard* ACardManager::GrantCardFromDeck(AController* Controller) {
 
     if (Deck.Num() == 0)
     {
-        UE_LOG(LogTemp, Error, TEXT("Deck ran out of cards while dealing to player %s!"), *Controller->GetName());
-        return nullptr;
+        UE_LOG(LogTemp, Warning, TEXT("Deck ran out of cards, regenerating!"));
+        InitializeDeck();
+        ShuffleDeck();
     }
 
-    APawn* PlayerPawn = Controller->GetPawn();
-    FVector PlayerLocation = PlayerPawn->GetActorLocation();
-    FVector ForwardVector = PlayerPawn->GetActorForwardVector();
-    FVector RightVector = PlayerPawn->GetActorRightVector();
-    FVector GridOrigin = PlayerLocation + (ForwardVector * ForwardOffset) + FVector(0.f, 0.f, VerticalOffset);
-    GridOrigin -= RightVector * ((CardsPerPlayer - 1) * CardSpacing / 2);
-
     FCardData CardData = Deck.Pop();
-    FVector CardPosition = GridOrigin + (RightVector * CardSpacing);
-    FRotator CardRotation = (PlayerLocation - CardPosition).Rotation();
-    CardRotation.Pitch = 0.f; // Prevent pitch tilt
-    CardRotation.Roll = 0.f;  // Prevent roll tilt
+    FVector CardPosition = FVector(0, 0, 0);
+    FRotator CardRotation = FRotator(0, 0, 0);
 
     FTransform CardTransform(CardRotation, CardPosition);
     ACard* SpawnedCard = SpawnCardAtLocation(CardData, CardTransform, Controller);
