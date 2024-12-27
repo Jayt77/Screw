@@ -90,7 +90,7 @@ protected:
     void GrantCard(AController* Controller, ACard* Card, FTransform Transform);
 
     UFUNCTION(BlueprintCallable, Category = "Card Settings")
-    ACard* GrantCardFromDeck(AController* Controller);
+    ACard* GrantCardFromDeck(AController* Controller, FTransform Transform);
     
 private:
     /** The deck containing card data */

@@ -123,6 +123,7 @@ void ACardManager::DealCardsToPlayers_Implementation()
             FCardData CardData = Deck.Pop();
             FVector CardPosition = GridOrigin + (RightVector * i * CardSpacing);
             FRotator CardRotation = ForwardVector.Rotation();
+            CardRotation.Yaw = -ForwardVector.Rotation().Yaw;
 
             FTransform CardTransform(CardRotation, CardPosition);
             ACard* SpawnedCard = SpawnCardAtLocation(CardData, CardTransform, Controller);
@@ -154,7 +155,7 @@ void ACardManager::GrantCard(AController* Controller, ACard* Card, FTransform Tr
     }
 }
 
-ACard* ACardManager::GrantCardFromDeck(AController* Controller) {
+ACard* ACardManager::GrantCardFromDeck(AController* Controller, FTransform Transform) {
     if (!IsValid(Controller) || !IsValid(Controller->GetPawn()))
     {
         UE_LOG(LogTemp, Warning, TEXT("Invalid Controller or Pawn detected."));
@@ -169,11 +170,7 @@ ACard* ACardManager::GrantCardFromDeck(AController* Controller) {
     }
 
     FCardData CardData = Deck.Pop();
-    FVector CardPosition = FVector(0, 0, 0);
-    FRotator CardRotation = FRotator(0, 0, 0);
-
-    FTransform CardTransform(CardRotation, CardPosition);
-    ACard* SpawnedCard = SpawnCardAtLocation(CardData, CardTransform, Controller);
+    ACard* SpawnedCard = SpawnCardAtLocation(CardData, Transform, Controller);
 
     if (IsValid(SpawnedCard))
     {
