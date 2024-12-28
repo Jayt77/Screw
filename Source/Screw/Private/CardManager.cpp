@@ -12,14 +12,6 @@ ACardManager::ACardManager()
 void ACardManager::BeginPlay()
 {
     Super::BeginPlay();
-
-    // Initialize the deck and deal cards
-    //InitializeDeck();
-    //ShuffleDeck();
-    //DealCardsToPlayers();
-
-    // Start the first player's turn
-    //AdvanceTurn();
 }
 
 void ACardManager::InitializeDeck()
@@ -107,36 +99,52 @@ void ACardManager::DealCardsToPlayers_Implementation()
         FVector ForwardVector = PlayerPawn->GetActorForwardVector();
         FVector RightVector = PlayerPawn->GetActorRightVector();
 
+        // Calculate Grid Origin
         FVector GridOrigin = PlayerLocation + (ForwardVector * ForwardOffset) + FVector(0.f, 0.f, VerticalOffset);
-        GridOrigin -= RightVector * ((CardsPerPlayer - 1) * CardSpacing / 2);
+        GridOrigin -= RightVector * ((HorizontalCardSpacing) / 2); // Center Grid Horizontally
+        GridOrigin -= ForwardVector * ((VerticalCardSpacing) / 2); // Center Grid Vertically
 
         FPlayerHand PlayerHand;
 
-        for (int32 i = 0; i < CardsPerPlayer; i++)
+        // 2x2 Grid
+        const int32 Rows = 2;
+        const int32 Cols = 2;
+        int32 CardIndex = 0;
+
+        for (int32 Row = 0; Row < Rows; Row++)
         {
-            if (Deck.Num() == 0)
+            for (int32 Col = 0; Col < Cols; Col++)
             {
-                UE_LOG(LogTemp, Error, TEXT("Deck ran out of cards while dealing to player %s!"), *Controller->GetName());
-                break;
-            }
+                if (Deck.Num() == 0)
+                {
+                    UE_LOG(LogTemp, Error, TEXT("Deck ran out of cards while dealing to player %s!"), *Controller->GetName());
+                    break;
+                }
 
-            FCardData CardData = Deck.Pop();
-            FVector CardPosition = GridOrigin + (RightVector * i * CardSpacing);
-            FRotator CardRotation = ForwardVector.Rotation();
-            CardRotation.Yaw = -ForwardVector.Rotation().Yaw;
+                FCardData CardData = Deck.Pop();
 
-            FTransform CardTransform(CardRotation, CardPosition);
-            ACard* SpawnedCard = SpawnCardAtLocation(CardData, CardTransform, Controller);
+                FVector CardPosition = GridOrigin
+                    + (RightVector * Col * HorizontalCardSpacing)  // Horizontal Spacing
+                    + (ForwardVector * Row * VerticalCardSpacing); // Vertical Spacing
 
-            if (IsValid(SpawnedCard))
-            {
-                PlayerHand.Cards.Add(SpawnedCard);
+                FRotator CardRotation = ForwardVector.Rotation();
+                CardRotation.Yaw = -ForwardVector.Rotation().Yaw;
+
+                FTransform CardTransform(CardRotation, CardPosition);
+                ACard* SpawnedCard = SpawnCardAtLocation(CardData, CardTransform, Controller);
+
+                if (IsValid(SpawnedCard))
+                {
+                    PlayerHand.Cards.Add(SpawnedCard);
+                }
+
+                CardIndex++;
             }
         }
         PlayerHands.Add(Controller, PlayerHand);
     }
 
-    UE_LOG(LogTemp, Log, TEXT("All players have been dealt their cards at proper positions."));
+    UE_LOG(LogTemp, Log, TEXT("All players have been dealt their cards in a 2x2 grid at proper positions."));
 }
 
 void ACardManager::GrantCard(AController* Controller, ACard* Card, FTransform Transform) {

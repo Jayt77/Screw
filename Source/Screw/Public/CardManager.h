@@ -35,7 +35,11 @@ public:
 
     /** Horizontal Spacing Between Cards */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Card Settings")
-    float CardSpacing = 60.f;
+    float HorizontalCardSpacing = 60.f;
+
+    /** Vertical Spacing Between Cards */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Card Settings")
+    float VerticalCardSpacing = 50.f;
 
     /** Forward Offset for Card Grid */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Card Settings")
