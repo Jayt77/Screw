@@ -128,7 +128,7 @@ void ACardManager::DealCardsToPlayers_Implementation()
                     + (ForwardVector * Row * VerticalCardSpacing); // Vertical Spacing
 
                 FRotator CardRotation = ForwardVector.Rotation();
-                CardRotation.Yaw = -ForwardVector.Rotation().Yaw;
+                CardRotation.Yaw += 180.0f;
 
                 FTransform CardTransform(CardRotation, CardPosition);
                 ACard* SpawnedCard = SpawnCardAtLocation(CardData, CardTransform, Controller);
@@ -196,6 +196,7 @@ void ACardManager::AdvanceTurn_Implementation()
         return;
     }
 
+    TurnCount++;
     CurrentTurnIndex = (CurrentTurnIndex + 1) % Controllers.Num();
     CurrentTurnPlayer = Controllers[CurrentTurnIndex];
 

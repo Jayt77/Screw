@@ -88,6 +88,9 @@ protected:
     int32 CurrentTurnIndex = -1;
 
     UPROPERTY(BlueprintReadWrite, Category = "Card Settings")
+    int32 TurnCount;
+
+    UPROPERTY(BlueprintReadWrite, Category = "Card Settings")
     AController* CurrentTurnPlayer;
 
     UFUNCTION(BlueprintCallable, Category = "Card Settings")
